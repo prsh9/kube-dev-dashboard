@@ -1,0 +1,51 @@
+{
+  "name": "kube-dev-dashboard",
+  "version": "0.0.1",
+  "description": "Kube Dev Dashboard",
+  "productName": "Kube Dev Dashboard",
+  "author": "PrSh9",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{ts,js,cjs,mjs,vue}\"",
+    "format": "prettier --write \"**/*.{js,ts,vue,css,html,md,json}\" --ignore-path .gitignore",
+    "test": "echo \"No test specified\" && exit 0",
+    "dev": "quasar dev",
+    "build": "quasar build",
+    "postinstall": "quasar prepare"
+  },
+  "dependencies": {
+    "@kubernetes/client-node": "1.0.0",
+    "@quasar/extras": "^1.16.17",
+    "axios": "^1.8.4",
+    "humanize-duration": "3.32.1",
+    "pinia": "^3.0.1",
+    "quasar": "^2.18.1",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@electron/packager": "^18.3.6",
+    "@eslint/js": "^9.24.0",
+    "@quasar/app-vite": "^2.2.0",
+    "@types/humanize-duration": "^3.27.4",
+    "@types/node": "^22.14.0",
+    "@vue/eslint-config-prettier": "^10.2.0",
+    "@vue/eslint-config-typescript": "^14.5.0",
+    "autoprefixer": "^10.4.21",
+    "electron": "^35.1.4",
+    "electron-devtools-installer": "^4.0.0",
+    "eslint": "^9.24.0",
+    "eslint-plugin-vue": "^9.32.0",
+    "globals": "^15.12.0",
+    "prettier": "^3.5.3",
+    "typescript": "~5.8.3",
+    "vite-plugin-checker": "^0.9.1",
+    "vue-tsc": "^2.2.8"
+  },
+  "engines": {
+    "node": "^28 || ^26 || ^24 || ^22 || ^20 || ^18",
+    "npm": ">= 6.13.4",
+    "yarn": ">= 1.21.1"
+  }
+}
