@@ -21,8 +21,8 @@ let mainWindow: BrowserWindow | undefined
 
 function installDevTools() {
   return installExtension(VUEJS_DEVTOOLS, { loadExtensionOptions: { allowFileAccess: true } })
-    .then(() => console.log(`Added Extensions`))
-    .catch((err) => console.log('An error occurred: ', err))
+    .then(() => console.log(`Added Devtool Extensions`))
+    .catch((err) => console.log('An error occurred in devtool extension init: ', err))
 }
 
 async function createMainWindow() {
@@ -68,7 +68,7 @@ async function createMainWindow() {
   })
 }
 
-void app.whenReady().then(installDevTools).then(registerKube).then(createMainWindow)
+void app.whenReady().then(installDevTools).then(setupIpcHandlers).then(createMainWindow)
 
 app.on('window-all-closed', () => {
   if (platform !== 'darwin') {
@@ -82,8 +82,8 @@ app.on('activate', () => {
   }
 })
 
-function registerKube() {
-  initialize()
+function setupIpcHandlers() {
+  ipcMain.handle('kube:init', () => initialize())
 
   ipcMain.on('kube:startPodWatcher', () =>
     startPodWatcher((err) => {

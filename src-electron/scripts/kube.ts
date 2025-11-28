@@ -12,10 +12,16 @@ export interface K8sObjectEvent<T extends k8s.KubernetesObject> {
 }
 
 export function initialize() {
-  kc = new k8s.KubeConfig()
-  kc.loadFromDefault()
+  try {
+    kc = new k8s.KubeConfig()
+    kc.loadFromDefault()
 
-  k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+    k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+    return true
+  } catch (err) {
+    console.error('Error initializing K8s client: ', err)
+    return false
+  }
 }
 
 export function registerPodWatcher(
@@ -24,34 +30,38 @@ export function registerPodWatcher(
   connectCallback: () => void,
   errorCallback: (errMessage?: Error) => void,
 ) {
-  const watch = new k8s.Watch(kc)
-  podWatcher = new k8s.ListWatch<k8s.V1Pod>(`/api/v1/namespaces/${namespace}/pods`, watch, () =>
-    k8sApi.listNamespacedPod({ namespace }),
-  )
+  try {
+    const watch = new k8s.Watch(kc)
+    podWatcher = new k8s.ListWatch<k8s.V1Pod>(`/api/v1/namespaces/${namespace}/pods`, watch, () =>
+      k8sApi.listNamespacedPod({ namespace }),
+    )
 
-  podWatcher.on('add', (pod: k8s.V1Pod) => {
-    // console.log('Pod added: ', pod.metadata?.name)
-    messageCallback({ event: 'ADDED', object: pod })
-  })
+    podWatcher.on('add', (pod: k8s.V1Pod) => {
+      // console.log('Pod added: ', pod.metadata?.name)
+      messageCallback({ event: 'ADDED', object: pod })
+    })
 
-  podWatcher.on('update', (pod: k8s.V1Pod) => {
-    // console.log('Pod Updated: ', pod.metadata?.name)
-    messageCallback({ event: 'MODIFIED', object: pod })
-  })
+    podWatcher.on('update', (pod: k8s.V1Pod) => {
+      // console.log('Pod Updated: ', pod.metadata?.name)
+      messageCallback({ event: 'MODIFIED', object: pod })
+    })
 
-  podWatcher.on('delete', (pod: k8s.V1Pod) => {
-    // console.log('Pod deleted: ', pod.metadata?.name)
-    messageCallback({ event: 'DELETED', object: pod })
-  })
+    podWatcher.on('delete', (pod: k8s.V1Pod) => {
+      // console.log('Pod deleted: ', pod.metadata?.name)
+      messageCallback({ event: 'DELETED', object: pod })
+    })
 
-  podWatcher.on('connect', () => {
-    connectCallback()
-  })
+    podWatcher.on('connect', () => {
+      connectCallback()
+    })
 
-  podWatcher.on('error', (err?: Error) => {
-    // console.error('Pod watcher error: ', err)
-    errorCallback(err ?? new Error('Unknown error'))
-  })
+    podWatcher.on('error', (err?: Error) => {
+      errorCallback(err ?? new Error('Unknown error'))
+    })
+  } catch (err) {
+    console.error('Error initializing pod watcher: ', err)
+    throw err
+  }
 }
 
 export function startPodWatcher(errorCallback: (errMessage?: Error) => void) {

@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="hHh lpR fFf">
+  <q-layout view="hHh lpR fFf" class="main-layout">
     <q-header bordered class="bg-primary text-white">
       <q-toolbar>
         <q-toolbar-title>
@@ -12,11 +12,9 @@
     </q-header>
 
     <q-drawer model-value :mini="mini" side="left" behavior="desktop" bordered>
-      <!-- <q-scroll-area class="fit"> -->
       <q-list padding>
         <NavDrawer v-for="link in linksList" :key="link.title" v-bind="link" />
       </q-list>
-      <!-- </q-scroll-area> -->
       <div class="absolute" style="bottom: 25px; right: -17px">
         <q-btn dense round color="secondary" :icon="mini ? 'mdi-chevron-double-right' : 'mdi-chevron-double-left'"
           @click="toggleLeftDrawer" />
@@ -31,13 +29,14 @@
       </router-view>
     </q-page-container>
 
-    <q-footer bordered class="bg-primary text-white">
-      <q-toolbar inset>
+    <q-footer bordered height-hint="30px" class="bg-primary text-white">
+      <q-bar inset>
+        <q-btn no-caps flat unelevated square stretch>Namespace: {{ selectedNamespace }}</q-btn>
+        <q-separator vertical />
         <q-space />
         <q-separator vertical />
-        <q-btn no-caps flat unelevated square stretch>{{ selectedNamespace }}</q-btn>
-        <q-separator vertical />
-      </q-toolbar>
+        <q-btn no-caps flat unelevated square stretch>{{ message }}</q-btn>
+      </q-bar>
 
     </q-footer>
   </q-layout>
@@ -66,6 +65,7 @@ export default defineComponent({
   },
 
   created() {
+    console.log("MainLayout created");
     this.initializeDefaultCallbacks();
   },
 
@@ -77,7 +77,7 @@ export default defineComponent({
   },
 
   computed: {
-    ...mapState(useK8DataStore, ['selectedNamespace']),
+    ...mapState(useK8DataStore, ['selectedNamespace', 'message']),
   },
 
   methods: {
@@ -91,12 +91,17 @@ export default defineComponent({
 </script>
 
 <style>
+.main-layout {
+  display: flex;
+  flex-direction: column;
+}
+
 .main-container {
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
   align-items: stretch;
   height: 100%;
-  /* min-height: 200px; */
-  max-height: 100vh;
+  max-height: 100%;
 }
 </style>

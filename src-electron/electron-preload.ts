@@ -3,6 +3,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 import type { K8sObjectEvent } from './scripts/kube'
 
 contextBridge.exposeInMainWorld('kube', {
+  initialize: () => ipcRenderer.invoke('kube:init'),
+
   registerPodWatcher: (namespace: string) =>
     ipcRenderer.invoke('kube:registerPodWatcher', namespace),
   startPodWatcher: () => ipcRenderer.send('kube:startPodWatcher'),

@@ -1,42 +1,32 @@
 <template>
-    <q-page class="row items-stretch justify-center" :style-fn="stylefn">
-        <div v-show="status" outlined class="col items-stretch check">
-            <slot></slot>
-        </div>
-        <div v-if="!status" class="row justify-center items-center">
-            {{ message }}
-        </div>
+    <q-page class="row flex-center my-style-grow no-scroll">
+        <slot></slot>
     </q-page>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { useK8DataStore } from 'src/stores/k8-data-store';
-import { mapState } from 'pinia';
 
 export default defineComponent({
     name: 'BasePage',
 
-    methods: {
-        stylefn() {
-            return {
-                height: "100%",
-                width: "100%",
-                maxWidth: "100%",
-                maxHeight: "100%",
-                overflow: "auto",
-            };
-        }
-    },
-
-    computed: {
-        ...mapState(useK8DataStore, ['status', 'message']),
+    created() {
+        console.log("BasePage created");
     },
 });
 </script>
 
-<style>
-.check {
-    max-height: 100%;
+<style lang="css">
+.my-style-grow {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    height: 100%;
+    max-height: 80vh;
+}
+
+.no-scroll {
+    overflow: hidden;
 }
 </style>

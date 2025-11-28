@@ -1,6 +1,8 @@
 import type { V1NamespaceList, V1PodList } from '@kubernetes/client-node'
 
 export interface IKubeAPI {
+  initialize: () => Promise<boolean>
+
   registerPodWatcher: (namespace: string) => Promise<void>
   startPodWatcher: () => void
   getPods: () => Promise<V1PodList>

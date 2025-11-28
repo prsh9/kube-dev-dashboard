@@ -14,8 +14,8 @@ import type { K8sObjectEvent } from 'app/src-electron/scripts/kube'
 
 export const useK8DataStore = defineStore('k8data', {
   state: () => ({
+    initSuccess: false,
     status: false,
-    loading: true,
     message: 'Loading',
     selectedNamespace: 'default',
     namespace_data: {
@@ -39,9 +39,6 @@ export const useK8DataStore = defineStore('k8data', {
   getters: {
     getStatus: (state) => {
       return state.status
-    },
-    isLoading: (state) => {
-      return state.loading
     },
     getMessage: (state) => {
       return state.message
@@ -82,11 +79,9 @@ export const useK8DataStore = defineStore('k8data', {
         .registerPodWatcher(this.selectedNamespace)
         .then(() => {
           this.status = true
-          this.loading = false
         })
         .catch((err) => {
           this.status = false
-          this.loading = false
           this.message = err.message
         })
     },
@@ -98,34 +93,33 @@ export const useK8DataStore = defineStore('k8data', {
           this.namespace_data.metadata = preparedData.metadata
           this.namespace_data.items = preparedData.items
           this.status = true
-          this.loading = false
+          return preparedData
         })
         .catch((err) => {
           console.log('Error fetching namespaces: ', err)
           this.status = false
-          this.loading = false
           this.message = err.message
+          return err
         })
+    },
+    initialize() {
+      return window.kube.initialize()
     },
     initializeDefaultCallbacks() {
       window.kube.onConnected(() => {
         this.status = true
-        this.loading = false
         this.message = 'Connected'
       })
 
       window.kube.onError((err) => {
         this.status = false
-        this.loading = false
         this.message = err.message
-
-        setTimeout(() => window.kube.startPodWatcher(), 10000)
+        // setTimeout(() => window.kube.startPodWatcher(), 10000)
       })
     },
     initializePodCallbacks() {
       console.log('Registering pod watcher...')
       window.kube.onPodMessage((message: K8sObjectEvent<V1Pod>) => {
-        // console.log('Pod message: ', message.event, message.object.metadata?.name)
         if (message.event === 'ADDED') {
           this.pod_data.items[getKey(message.object.metadata)] = message.object
         }
@@ -143,9 +137,6 @@ export const useK8DataStore = defineStore('k8data', {
       if (podToRemove) {
         const namespace = podToRemove.metadata?.namespace ?? ''
         const name = podToRemove.metadata?.name ?? ''
-
-        console.log('Deleting pod 111 : ', namespace, name)
-
         return window.kube.deletePods(namespace, name)
       }
       return Promise.reject(new Error('Pod not found'))

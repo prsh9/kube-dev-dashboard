@@ -1,8 +1,8 @@
 <template>
-  <q-linear-progress :indeterminate="podStatusActual == 'Failed'" rounded :color="podStatusColor + ' lighten-3'"
-    size="20px" :buffer-value="readyContainerPercent" :value="readyContainerPercent">
+  <q-linear-progress :indeterminate="podStatusActual == 'Failed'" rounded :color="podStatusColor + '-4'" size="20px"
+    :buffer-value="readyContainerPercent" :value="readyContainerPercent">
     <div class="absolute-full flex flex-center">
-      <q-badge :color="podStatusColor + '-3'" text-color="black" :label="containerLabel" />
+      <q-badge :color="podStatusColor + '-4'" text-color="black" :label="containerLabel" />
     </div>
   </q-linear-progress>
   <q-avatar

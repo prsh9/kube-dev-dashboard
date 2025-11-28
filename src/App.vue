@@ -4,8 +4,36 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { useK8DataStore } from 'src/stores/k8-data-store';
+import { mapState } from 'pinia';
 
 export default defineComponent({
-  name: 'App'
+  name: 'App',
+
+  created() {
+    console.log("App created");
+
+  },
+
+  computed: {
+    ...mapState(useK8DataStore, ['initSuccess']),
+  },
+
+  methods: {
+    async initApp() {
+      try {
+        const response = await window.kube.initialize();
+        console.log("Kube initialized:", response);
+        this.initSuccess = response;
+        if (!response) {
+          await this.$router.push('/error-init');
+        }
+      } catch {
+        this.initSuccess = false;
+        await this.$router.push('/error-init');
+      }
+    }
+  }
 });
+
 </script>

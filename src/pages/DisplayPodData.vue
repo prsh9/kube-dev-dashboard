@@ -1,9 +1,17 @@
 <template>
   <BasePage>
-    <!-- <q-page class="row items-stretch justify-center" :style-fn="styleFn"> -->
-    <!-- <div v-show="status" outlined class="col items-stretch"> -->
-    <q-table title="Pods" :rows="rows" :columns="columns" :row-key="getPodUid" card-class="fit" :pagination="pagination"
-      hide-pagination>
+    <q-table title="Pods" :rows="rows" :filter="filter" :columns="columns" :row-key="getPodUid"
+      card-class="my-sticky-header-table fit flex-grow col overflow-auto" :pagination="pagination" hide-pagination
+      hide-selected-banner>
+
+      <template v-slot:top-right>
+        <q-input dense debounce="300" v-model="filter" placeholder="Search">
+          <template v-slot:append>
+            <q-icon name="mdi-filter" />
+          </template>
+        </q-input>
+        <q-icon dense name="mdi-refresh" />
+      </template>
 
       <template v-slot:body="props">
         <q-tr :props="props">
@@ -39,19 +47,15 @@
         <q-tr v-show="props.expand" :props="props">
           <q-td colspan="100%">
             <div class="text-left flex">
-              <span>This is expand slot for row above: {{ props.row.metadata.name }}.</span>
+              <span>{{ props.row.metadata.namespace }} : {{ props.row.metadata.name }}</span>
               <q-space />
               <q-btn size="sm" flat dense icon="mdi-delete" @click="actionDelete(props.row)" />
+              <q-space />
             </div>
           </q-td>
         </q-tr>
       </template>
     </q-table>
-    <!-- </div> -->
-    <!-- <div v-if="!status" class="row justify-center items-center"> -->
-    <!-- {{ message }} -->
-    <!-- </div> -->
-    <!-- </q-page> -->
   </BasePage>
 </template>
 
@@ -76,6 +80,7 @@ export default defineComponent({
   },
 
   created() {
+    console.log("DisplayPodData created");
     this.initializePodCallbacks();
     this.registerPodWatcher();
   },
@@ -137,16 +142,52 @@ export default defineComponent({
         sortBy: "name",
         rowsPerPage: 0
       },
+      filter: ""
     };
   }
 });
 </script>
 
-<style lang="css">
+<style lang="scss">
+// $
+
 .min_w_h {
   min-width: 130px;
   display: flex;
   align-items: center;
   flex-direction: row;
+}
+
+.my-sticky-header-table {
+  /* height or max-height is important */
+  max-height: 50%;
+
+  .q-table__top,
+  .q-table__bottom,
+  thead tr:first-child th {
+    /* bg color is important for th; just specify one */
+    background-color: $primary;
+  }
+
+  thead tr th {
+    position: sticky;
+    z-index: 1;
+  }
+
+  thead tr:first-child th {
+    top: 0;
+  }
+
+  /* this is when the loading indicator appears */
+  &.q-table--loading thead tr:last-child th {
+    /* height of all previous header rows */
+    top: 48px;
+  }
+
+  /* prevent scrolling behind sticky top row on focus */
+  tbody {
+    /* height of all previous header rows */
+    scroll-margin-top: 48px;
+  }
 }
 </style>
