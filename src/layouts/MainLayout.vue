@@ -35,9 +35,19 @@
         <q-separator vertical />
         <q-space />
         <q-separator vertical />
-        <q-btn no-caps flat unelevated square stretch>{{ message }}</q-btn>
+        <q-btn no-caps flat unelevated square stretch @click="dialog = true">{{ connectionStatus }}</q-btn>
+        <q-badge class="indicator" :class="[status ? 'success-indicator' : 'error-indicator']" rounded></q-badge>
       </q-bar>
-
+      <q-dialog v-model="dialog">
+        <q-card style="width: 350px">
+          <q-card-section class="row items-center no-wrap">
+            <div>
+              <div class="text-weight-bold">Error</div>
+              <div class="text-grey">{{ message }}</div>
+            </div>
+          </q-card-section>
+        </q-card>
+      </q-dialog>
     </q-footer>
   </q-layout>
 </template>
@@ -72,19 +82,23 @@ export default defineComponent({
   data() {
     return {
       linksList,
-      mini: true
+      mini: true,
+      dialog: false,
     }
   },
 
   computed: {
-    ...mapState(useK8DataStore, ['selectedNamespace', 'message']),
+    ...mapState(useK8DataStore, ['selectedNamespace', 'status', 'message']),
+    connectionStatus(): string {
+      return this.status ? "Connected" : "Error";
+    }
   },
 
   methods: {
     ...mapActions(useK8DataStore, ['initializeDefaultCallbacks']),
     toggleLeftDrawer() {
       this.mini = !this.mini;
-    }
+    },
   }
 });
 
@@ -103,5 +117,20 @@ export default defineComponent({
   align-items: stretch;
   height: 100%;
   max-height: 100%;
+}
+
+.indicator {
+  background-clip: content-box;
+  height: 10px !important;
+  width: 10px !important;
+  box-shadow: 0px 0px 15px 1px white;
+}
+
+.success-indicator {
+  background: radial-gradient(circle at 50% 50%, #1cf700, #49eb34, #ffffff);
+}
+
+.error-indicator {
+  background: radial-gradient(circle at 50% 50%, #eb321a, #eb321a, #ffffff);
 }
 </style>

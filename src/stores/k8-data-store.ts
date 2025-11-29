@@ -37,17 +37,6 @@ export const useK8DataStore = defineStore('k8data', {
   }),
 
   getters: {
-    getStatus: (state) => {
-      return state.status
-    },
-    getMessage: (state) => {
-      return state.message
-    },
-
-    // Namespace
-    getSelectedNamespace: (state) => {
-      return state.selectedNamespace
-    },
     getAllNamespaceItems: (state) => {
       return Object.values(state.namespace_data.items)
     },
@@ -74,6 +63,38 @@ export const useK8DataStore = defineStore('k8data', {
   },
 
   actions: {
+    // SECTION -- Init
+    initialize() {
+      return window.kube.initialize()
+    },
+
+    initializeDefaultCallbacks() {
+      window.kube.onConnected(() => {
+        this.status = true
+        this.message = 'Connected'
+      })
+
+      window.kube.onError((err) => {
+        this.status = false
+        this.message = err.message
+      })
+    },
+    initializePodCallbacks() {
+      console.log('Registering pod watcher...')
+      window.kube.onPodMessage((message: K8sObjectEvent<V1Pod>) => {
+        if (message.event === 'ADDED') {
+          this.pod_data.items[getKey(message.object.metadata)] = message.object
+        }
+        if (message.event === 'MODIFIED') {
+          this.pod_data.items[getKey(message.object.metadata)] = message.object
+        }
+        if (message.event === 'DELETED') {
+          delete this.pod_data.items[getKey(message.object.metadata)]
+        }
+      })
+    },
+
+    // SECTION -- Watchers
     registerPodWatcher() {
       window.kube
         .registerPodWatcher(this.selectedNamespace)
@@ -85,6 +106,7 @@ export const useK8DataStore = defineStore('k8data', {
           this.message = err.message
         })
     },
+
     fetchNamespaces() {
       return window.kube
         .getAllNamespaces()
@@ -101,35 +123,6 @@ export const useK8DataStore = defineStore('k8data', {
           this.message = err.message
           return err
         })
-    },
-    initialize() {
-      return window.kube.initialize()
-    },
-    initializeDefaultCallbacks() {
-      window.kube.onConnected(() => {
-        this.status = true
-        this.message = 'Connected'
-      })
-
-      window.kube.onError((err) => {
-        this.status = false
-        this.message = err.message
-        // setTimeout(() => window.kube.startPodWatcher(), 10000)
-      })
-    },
-    initializePodCallbacks() {
-      console.log('Registering pod watcher...')
-      window.kube.onPodMessage((message: K8sObjectEvent<V1Pod>) => {
-        if (message.event === 'ADDED') {
-          this.pod_data.items[getKey(message.object.metadata)] = message.object
-        }
-        if (message.event === 'MODIFIED') {
-          this.pod_data.items[getKey(message.object.metadata)] = message.object
-        }
-        if (message.event === 'DELETED') {
-          delete this.pod_data.items[getKey(message.object.metadata)]
-        }
-      })
     },
 
     deletePod(podUid: string) {
