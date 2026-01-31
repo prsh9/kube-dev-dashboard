@@ -5,12 +5,12 @@
       hide-selected-banner>
 
       <template v-slot:top-right>
-        <q-input dense debounce="300" v-model="filter" placeholder="Search">
+        <q-input dense clearable debounce="300" v-model="filter" placeholder="Search">
           <template v-slot:append>
             <q-icon name="mdi-filter" />
           </template>
         </q-input>
-        <q-icon dense name="mdi-refresh" />
+        <q-btn outline flat dense icon="mdi-refresh" @click="registerPodWatcher" />
       </template>
 
       <template v-slot:body="props">
@@ -45,7 +45,7 @@
 
         </q-tr>
         <q-tr v-show="props.expand" :props="props">
-          <q-td colspan="100%">
+          <q-td colspan="100%" class="bg-grey-2">
             <div class="text-left flex">
               <span>{{ props.row.metadata.namespace }} : {{ props.row.metadata.name }}</span>
               <q-space />
@@ -82,7 +82,13 @@ export default defineComponent({
   created() {
     console.log("DisplayPodData created");
     this.initializePodCallbacks();
-    this.registerPodWatcher();
+  },
+
+  activated() {
+    console.log("DisplayPodData activated");
+    if (this.shouldRefreshPods) {
+      this.registerPodWatcher();
+    }
   },
 
   methods: {
@@ -103,19 +109,10 @@ export default defineComponent({
         });
       });
     },
-    styleFn() {
-      return {
-        height: "100%",
-        width: "100%",
-        maxWidth: "100%",
-        maxHeight: "100%",
-        overflow: "auto",
-      };
-    }
   },
 
   computed: {
-    ...mapState(useK8DataStore, ['getAllPodItems', 'selectedNamespace', 'status', "message"]),
+    ...mapState(useK8DataStore, ['getAllPodItems', 'selectedNamespace', 'status', "message", "shouldRefreshPods"]),
     rows() {
       return this.getAllPodItems;
     },
@@ -166,7 +163,7 @@ export default defineComponent({
   .q-table__bottom,
   thead tr:first-child th {
     /* bg color is important for th; just specify one */
-    background-color: $primary-background;
+    background-color: $background;
   }
 
   thead tr th {

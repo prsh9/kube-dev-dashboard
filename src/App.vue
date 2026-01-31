@@ -12,7 +12,9 @@ export default defineComponent({
 
   created() {
     console.log("App created");
-
+    this.initApp().catch((error) => {
+      console.error("Initialization error:", error);
+    });
   },
 
   computed: {

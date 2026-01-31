@@ -1,6 +1,5 @@
 import type {
   V1Pod,
-  V1ObjectMeta,
   V1Namespace,
   V1Service,
   V1Deployment,
@@ -19,19 +18,19 @@ export const useK8DataStore = defineStore('k8data', {
     message: 'Loading',
     selectedNamespace: 'default',
     namespace_data: {
-      metadata: null as object | null,
+      shouldRefresh: true,
       items: {} as K8SItemData<V1Namespace>,
     },
     pod_data: {
-      metadata: null as V1ObjectMeta | null,
+      shouldRefresh: true,
       items: {} as K8SItemData<V1Pod>,
     },
     svc_data: {
-      metadata: null as object | null,
+      shouldRefresh: true,
       items: {} as K8SItemData<V1Service>,
     },
     deployment_data: {
-      metadata: null as object | null,
+      shouldRefresh: true,
       items: {} as K8SItemData<V1Deployment>,
     },
   }),
@@ -59,6 +58,19 @@ export const useK8DataStore = defineStore('k8data', {
 
     getAllDeploymentItems: (state) => {
       return Object.values(state.deployment_data.items)
+    },
+
+    shouldRefreshNamespaces: (state) => {
+      return state.namespace_data.shouldRefresh
+    },
+    shouldRefreshPods: (state) => {
+      return state.pod_data.shouldRefresh
+    },
+    shouldRefreshSvcs: (state) => {
+      return state.svc_data.shouldRefresh
+    },
+    shouldRefreshDeployments: (state) => {
+      return state.deployment_data.shouldRefresh
     },
   },
 
@@ -94,12 +106,26 @@ export const useK8DataStore = defineStore('k8data', {
       })
     },
 
+    setRefreshNamespaces(shouldRefresh: boolean) {
+      this.namespace_data.shouldRefresh = shouldRefresh
+    },
+    setRefeshPods(shouldRefresh: boolean) {
+      this.pod_data.shouldRefresh = shouldRefresh
+    },
+    setRefeshSvcs(shouldRefresh: boolean) {
+      this.svc_data.shouldRefresh = shouldRefresh
+    },
+    setRefeshDeployments(shouldRefresh: boolean) {
+      this.deployment_data.shouldRefresh = shouldRefresh
+    },
+
     // SECTION -- Watchers
     registerPodWatcher() {
       window.kube
         .registerPodWatcher(this.selectedNamespace)
         .then(() => {
           this.status = true
+          this.setRefeshPods(false)
         })
         .catch((err) => {
           this.status = false
@@ -112,7 +138,6 @@ export const useK8DataStore = defineStore('k8data', {
         .getAllNamespaces()
         .then((res: V1NamespaceList) => {
           const preparedData = prepareData(res)
-          this.namespace_data.metadata = preparedData.metadata
           this.namespace_data.items = preparedData.items
           this.status = true
           return preparedData
@@ -133,6 +158,16 @@ export const useK8DataStore = defineStore('k8data', {
         return window.kube.deletePods(namespace, name)
       }
       return Promise.reject(new Error('Pod not found'))
+    },
+
+    applyNamespaceSelection(namespace: string) {
+      this.selectedNamespace = namespace
+      this.pod_data.shouldRefresh = true
+      this.svc_data.shouldRefresh = true
+      this.deployment_data.shouldRefresh = true
+      this.pod_data.items = {}
+      this.svc_data.items = {}
+      this.deployment_data.items = {}
     },
   },
 })

@@ -2,12 +2,13 @@ import * as k8s from '@kubernetes/client-node'
 
 let k8sApi: k8s.CoreV1Api
 let kc: k8s.KubeConfig
+
 let podWatcher: k8s.ListWatch<k8s.V1Pod>
 
-type PodEvent = 'ADDED' | 'MODIFIED' | 'DELETED'
+type Event = 'ADDED' | 'MODIFIED' | 'DELETED'
 
 export interface K8sObjectEvent<T extends k8s.KubernetesObject> {
-  event: PodEvent
+  event: Event
   object: T
 }
 
@@ -17,6 +18,9 @@ export function initialize() {
     kc.loadFromDefault()
 
     k8sApi = kc.makeApiClient(k8s.CoreV1Api)
+    if (k8sApi == undefined) {
+      throw new Error('K8s API client is undefined')
+    }
     return true
   } catch (err) {
     console.error('Error initializing K8s client: ', err)
@@ -31,6 +35,15 @@ export function registerPodWatcher(
   errorCallback: (errMessage?: Error) => void,
 ) {
   try {
+    if (podWatcher) {
+      console.log('Stopping existing pod watcher before registering new one')
+
+      podWatcher
+        .stop()
+        .then(() => console.log('Stopped existing pod watcher'))
+        .catch((err) => console.error('Error stopping existing pod watcher: ', err))
+    }
+
     const watch = new k8s.Watch(kc)
     podWatcher = new k8s.ListWatch<k8s.V1Pod>(`/api/v1/namespaces/${namespace}/pods`, watch, () =>
       k8sApi.listNamespacedPod({ namespace }),
@@ -56,22 +69,19 @@ export function registerPodWatcher(
     })
 
     podWatcher.on('error', (err?: Error) => {
-      errorCallback(err ?? new Error('Unknown error'))
+      if (err && !(err instanceof k8s.AbortError)) {
+        errorCallback(err ?? new Error('Unknown error'))
+      }
+    })
+
+    podWatcher.start().catch((err) => {
+      console.error('Error starting watcher: ', err)
+      errorCallback(err)
     })
   } catch (err) {
     console.error('Error initializing pod watcher: ', err)
     throw err
   }
-}
-
-export function startPodWatcher(errorCallback: (errMessage?: Error) => void) {
-  if (!podWatcher) {
-    throw new Error('Pod watcher is not initialized')
-  }
-  podWatcher.start().catch((err) => {
-    console.error('Error starting watcher: ', err)
-    errorCallback(err)
-  })
 }
 
 export function deletePod(podNamespace: string, podName: string) {
@@ -92,7 +102,7 @@ export function getAllNamespaces() {
   try {
     return k8sApi.listNamespace()
   } catch (err) {
-    console.error(err)
+    console.error('This Error :', err)
     throw err
   }
 }

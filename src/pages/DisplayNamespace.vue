@@ -2,7 +2,7 @@
   <BasePage>
     <q-table title="Namespaces" :rows="rows" :columns="columns" :row-key="getNamespaceUid" :filter="filter"
       class="my-sticky-header-table fit flex-grow col overflow-auto" :pagination="pagination" hide-pagination
-      hide-selected-banner selection="single" v-model:selected="selected" @update:selected="onSelectionChanged">
+      hide-selected-banner selection="single" v-model:selected="selected">
 
       <template v-slot:top-right>
         <q-input dense clearable debounce="300" v-model="filter" placeholder="Search">
@@ -14,7 +14,7 @@
       </template>
 
       <template v-slot:header="props">
-        <q-tr :class="props.__trClass" :props="props" @click="props.selected = !props.selected">
+        <q-tr :class="props.__trClass" :props="props">
           <q-th v-for="name in props.colsMap" :key="name.label">
             {{ name.label }}
           </q-th>
@@ -22,10 +22,8 @@
       </template>
 
       <template v-slot:body="props">
-        <q-tr class="cursor-pointer my-row" :props="props" @click="props.selected = !props.selected">
-          <q-td key="current" class="cursor-pointer" :props="props" @click="props.selected = !props.selected">
-            <!-- <q-radio dense keep-color :model-value="selectedNamespace" :val="props.row.metadata?.name" @click="null" /> -->
-
+        <q-tr class="cursor-pointer my-row" :props="props">
+          <q-td key="current" class="cursor-pointer" :props="props">
             <q-icon size="xs" :name="selectedNamespace == props.row.metadata?.name ? 'mdi-check-circle-outline' : ''"
               @click="null" />
           </q-td>
@@ -42,7 +40,7 @@
           </q-td>
 
           <q-td key="action" :props="props" @mouseenter="showAction = true" @mouseleave="showAction = false">
-            <q-btn class="delete-btn" flat dense @click="applyNamespace"
+            <q-btn class="delete-btn" flat dense @click="applyNamespace(props.row)"
               :label="props.row.metadata?.name == selectedNamespace ? 'Selected' : 'Select'">
             </q-btn>
           </q-td>
@@ -71,12 +69,21 @@ export default defineComponent({
   created() {
   },
 
-  beforeMount() {
-    this.refreshNamespace();
+  activated() {
+    console.log("DisplayNamespace activated");
+    if (this.shouldRefreshNamespaces) {
+      this.refreshNamespace();
+    }
+    if (!this.refreshTimer) {
+      this.refreshTimer = setTimeout(() => {
+        this.setRefreshNamespaces(true);
+        this.refreshTimer = null;
+      }, 60000);
+    }
   },
 
   methods: {
-    ...mapActions(useK8DataStore, ['fetchNamespaces']),
+    ...mapActions(useK8DataStore, ['fetchNamespaces', 'setRefreshNamespaces', 'applyNamespaceSelection']),
     getNamespaceUid(ns: V1Namespace): string {
       return getKey(ns.metadata);
     },
@@ -91,34 +98,22 @@ export default defineComponent({
             this.selected.push(row);
           }
         })
+        this.setRefreshNamespaces(false);
       }).catch((err) => {
-        setTimeout(() => this.refreshNamespace(), 5000);
         console.log("Error: ", err);
       });
 
     },
-    onSelectionChanged() {
-      if (this.selected.length == 0) {
-        this.selectionChanged = false;
-        this.rows.forEach((row: V1Namespace) => {
-          if (this.selectedNamespace == row.metadata?.name) {
-            this.selected.push(row);
-          }
-        })
+    applyNamespace(row: V1Namespace) {
+      console.log("Applying namespace: ", row.metadata?.name);
+      if (row.metadata?.name) {
+        this.applyNamespaceSelection(row.metadata?.name);
       }
-      if (this.selected.length == 0 || this.selected[0]?.metadata?.name == this.selectedNamespace) {
-        this.selectionChanged = false;
-      } else {
-        this.selectionChanged = true;
-      }
-    },
-    applyNamespace() {
-      console.log("Applying namespace: ", this.selected[0]?.metadata?.name);
     },
   },
 
   computed: {
-    ...mapState(useK8DataStore, ['getAllNamespaceItems', 'status', 'message', 'selectedNamespace']),
+    ...mapState(useK8DataStore, ['getAllNamespaceItems', 'status', 'message', 'selectedNamespace', 'shouldRefreshNamespaces']),
     rows() {
       return this.getAllNamespaceItems;
     },
@@ -151,6 +146,7 @@ export default defineComponent({
       selectionChanged: false,
       selected: [] as V1Namespace[],
       filter: "",
+      refreshTimer: null as NodeJS.Timeout | null
     };
   }
 });
@@ -174,7 +170,7 @@ export default defineComponent({
   .q-table__bottom,
   thead tr:first-child th {
     /* bg color is important for th; just specify one */
-    background-color: $primary-background;
+    background-color: $background;
   }
 
   thead tr th {

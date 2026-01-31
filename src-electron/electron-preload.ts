@@ -5,22 +5,27 @@ import type { K8sObjectEvent } from './scripts/kube'
 contextBridge.exposeInMainWorld('kube', {
   initialize: () => ipcRenderer.invoke('kube:init'),
 
-  registerPodWatcher: (namespace: string) =>
-    ipcRenderer.invoke('kube:registerPodWatcher', namespace),
-  startPodWatcher: () => ipcRenderer.send('kube:startPodWatcher'),
+  registerPodWatcher: (namespace: string) => {
+    return ipcRenderer.invoke('kube:registerPodWatcher', namespace)
+  },
+
   getPods: (namespace: string) => ipcRenderer.invoke('kube:pods', namespace),
+
   deletePods: (podNamespace: string, podName: string) => {
     console.log('Deleting pod preload', podNamespace, podName)
     return ipcRenderer.invoke('kube:deletePod', podNamespace, podName)
   },
+
   onPodMessage: (callback: (value: K8sObjectEvent<V1Pod>) => void) =>
     ipcRenderer.on('k8s-pod-message', (_event, value) => callback(value)),
 
   getAllNamespaces: () => ipcRenderer.invoke('kube:namespaces'),
 
   onConnected: (callback: () => void) => ipcRenderer.on('k8s-connected', () => callback()),
-  onError: (callback: (err: Error) => void) =>
-    ipcRenderer.on('k8s-error', (_event, err) => callback(err)),
+
+  onError: (callback: (err: Error) => void) => {
+    return ipcRenderer.on('k8s-error', (_event, err) => callback(err))
+  },
 })
 
 /**

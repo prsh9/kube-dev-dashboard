@@ -1,6 +1,6 @@
 <template>
   <q-layout view="hHh lpR fFf" class="main-layout">
-    <q-header bordered class="bg-primary text-white">
+    <q-header bordered class="bg-background text-white">
       <q-toolbar>
         <q-toolbar-title>
           <q-avatar>
@@ -39,12 +39,14 @@
         <q-badge class="indicator" :class="[status ? 'success-indicator' : 'error-indicator']" rounded></q-badge>
       </q-bar>
       <q-dialog v-model="dialog">
-        <q-card style="width: 350px">
-          <q-card-section class="row items-center no-wrap">
-            <div>
-              <div class="text-weight-bold">Error</div>
-              <div class="text-grey">{{ message }}</div>
-            </div>
+        <q-card style="max-width: 650px">
+          <!-- class="row items-center no-wrap" -->
+          <q-card-section class="text-h6">
+            <div class="text-weight-bold">Error</div>
+          </q-card-section>
+          <q-separator />
+          <q-card-section>
+            <div class="text-grey wrap-text">{{ message }}</div>
           </q-card-section>
         </q-card>
       </q-dialog>
