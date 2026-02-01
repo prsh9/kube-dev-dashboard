@@ -90,8 +90,7 @@ export function deletePod(podNamespace: string, podName: string) {
 
 export function getPods() {
   try {
-    const podRes = podWatcher.list()
-    return podRes
+    return podWatcher.list()
   } catch (err) {
     console.error(err)
     throw err

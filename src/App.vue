@@ -26,12 +26,10 @@ export default defineComponent({
       try {
         const response = await window.kube.initialize();
         console.log("Kube initialized:", response);
-        this.initSuccess = response;
         if (!response) {
           await this.$router.push('/error-init');
         }
       } catch {
-        this.initSuccess = false;
         await this.$router.push('/error-init');
       }
     }

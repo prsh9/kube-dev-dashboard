@@ -8,7 +8,6 @@ import {
   getPods,
   initialize,
   registerPodWatcher,
-  startPodWatcher,
 } from './scripts/kube'
 import { installExtension, VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 
@@ -84,13 +83,6 @@ app.on('activate', () => {
 
 function setupIpcHandlers() {
   ipcMain.handle('kube:init', () => initialize())
-
-  ipcMain.on('kube:startPodWatcher', () =>
-    startPodWatcher((err) => {
-      mainWindow?.webContents.send('k8s-error', err)
-      console.error('Error connecting to K8s: ', err)
-    }),
-  )
 
   ipcMain.handle('kube:deletePod', (event, podNamespace, podName) =>
     deletePod(podNamespace, podName),

@@ -31,18 +31,19 @@
 
     <q-footer bordered height-hint="30px" class="bg-primary text-white">
       <q-bar inset>
-        <q-btn no-caps flat unelevated square stretch>Namespace: {{ selectedNamespace }}</q-btn>
+        <q-btn no-caps flat unelevated square stretch
+               style="max-width: 200px"
+               to="/namespace"> <div class="ellipsis text-no-wrap">NS: {{ selectedNamespace }}</div></q-btn>
         <q-separator vertical />
         <q-space />
         <q-separator vertical />
         <q-btn no-caps flat unelevated square stretch @click="dialog = true">{{ connectionStatus }}</q-btn>
-        <q-badge class="indicator" :class="[status ? 'success-indicator' : 'error-indicator']" rounded></q-badge>
+        <q-badge class="indicator" :class="[status ? 'success-indicator' : 'error-indicator']" rounded @click="dialog = true"></q-badge>
       </q-bar>
       <q-dialog v-model="dialog">
         <q-card style="max-width: 650px">
-          <!-- class="row items-center no-wrap" -->
           <q-card-section class="text-h6">
-            <div class="text-weight-bold">Error</div>
+            <div class="text-weight-bold">Connection Status</div>
           </q-card-section>
           <q-separator />
           <q-card-section>
