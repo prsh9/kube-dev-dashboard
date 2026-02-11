@@ -1,4 +1,4 @@
-import type { V1Pod } from '@kubernetes/client-node'
+import type { V1Deployment, V1Pod } from '@kubernetes/client-node'
 import { contextBridge, ipcRenderer } from 'electron'
 import type { K8sObjectEvent } from './scripts/kube'
 
@@ -8,18 +8,21 @@ contextBridge.exposeInMainWorld('kube', {
   registerPodWatcher: (namespace: string) => {
     return ipcRenderer.invoke('kube:registerPodWatcher', namespace)
   },
-
-  getPods: (namespace: string) => ipcRenderer.invoke('kube:pods', namespace),
+  registerDeploymentWatcher: (namespace: string) => {
+    return ipcRenderer.invoke('kube:registerDeploymentWatcher', namespace)
+  },
 
   deletePods: (podNamespace: string, podName: string) => {
     console.log('Deleting pod preload', podNamespace, podName)
     return ipcRenderer.invoke('kube:deletePod', podNamespace, podName)
   },
 
+  getAllNamespaces: () => ipcRenderer.invoke('kube:namespaces'),
+
   onPodMessage: (callback: (value: K8sObjectEvent<V1Pod>) => void) =>
     ipcRenderer.on('k8s-pod-message', (_event, value) => callback(value)),
-
-  getAllNamespaces: () => ipcRenderer.invoke('kube:namespaces'),
+  onDeploymentMessage: (callback: (value: K8sObjectEvent<V1Deployment>) => void) =>
+    ipcRenderer.on('k8s-deployment-message', (_event, value) => callback(value)),
 
   onConnected: (callback: () => void) => ipcRenderer.on('k8s-connected', () => callback()),
 

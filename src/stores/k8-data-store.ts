@@ -6,10 +6,9 @@ import type {
   V1NamespaceList,
 } from '@kubernetes/client-node'
 
-import { getKey, prepareData } from '../scripts/k8s-helpers'
+import { initializeLifecycleCallbacks, prepareData } from '../scripts/k8s-helpers'
 import type { K8SItemData } from '../scripts/k8s-helpers'
 import { defineStore, acceptHMRUpdate } from 'pinia'
-import type { K8sObjectEvent } from 'app/src-electron/scripts/kube'
 
 export const useK8DataStore = defineStore('k8data', {
   state: () => ({
@@ -92,30 +91,22 @@ export const useK8DataStore = defineStore('k8data', {
       })
     },
     initializePodCallbacks() {
-      console.log('Registering pod watcher...')
-      window.kube.onPodMessage((message: K8sObjectEvent<V1Pod>) => {
-        if (message.event === 'ADDED') {
-          this.pod_data.items[getKey(message.object.metadata)] = message.object
-        }
-        if (message.event === 'MODIFIED') {
-          this.pod_data.items[getKey(message.object.metadata)] = message.object
-        }
-        if (message.event === 'DELETED') {
-          delete this.pod_data.items[getKey(message.object.metadata)]
-        }
-      })
+      initializeLifecycleCallbacks(this.pod_data.items, window.kube.onPodMessage)
+    },
+    initializeDeploymentCallbacks() {
+      initializeLifecycleCallbacks(this.deployment_data.items, window.kube.onDeploymentMessage)
     },
 
     setRefreshNamespaces(shouldRefresh: boolean) {
       this.namespace_data.shouldRefresh = shouldRefresh
     },
-    setRefeshPods(shouldRefresh: boolean) {
+    setRefreshPods(shouldRefresh: boolean) {
       this.pod_data.shouldRefresh = shouldRefresh
     },
     setRefeshSvcs(shouldRefresh: boolean) {
       this.svc_data.shouldRefresh = shouldRefresh
     },
-    setRefeshDeployments(shouldRefresh: boolean) {
+    setRefreshDeployments(shouldRefresh: boolean) {
       this.deployment_data.shouldRefresh = shouldRefresh
     },
 
@@ -125,7 +116,20 @@ export const useK8DataStore = defineStore('k8data', {
         .registerPodWatcher(this.selectedNamespace)
         .then(() => {
           this.status = true
-          this.setRefeshPods(false)
+          this.setRefreshPods(false)
+        })
+        .catch((err) => {
+          this.status = false
+          this.message = err.message
+        })
+    },
+
+    registerDeploymentWatcher() {
+      window.kube
+        .registerDeploymentWatcher(this.selectedNamespace)
+        .then(() => {
+          this.status = true
+          this.setRefreshDeployments(false)
         })
         .catch((err) => {
           this.status = false

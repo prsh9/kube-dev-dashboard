@@ -17,7 +17,7 @@ export default defineComponent({
       required: true,
     },
     timestamp: {
-      type: Date,
+      type: [Date, String],
       required: true,
     },
   },

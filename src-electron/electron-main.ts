@@ -5,8 +5,8 @@ import { fileURLToPath } from 'url'
 import {
   deletePod,
   getAllNamespaces,
-  getPods,
   initialize,
+  registerDeploymentWatcher,
   registerPodWatcher,
 } from './scripts/kube'
 import { installExtension, VUEJS_DEVTOOLS } from 'electron-devtools-installer'
@@ -89,7 +89,21 @@ function setupIpcHandlers() {
   )
 
   ipcMain.handle('kube:namespaces', () => getAllNamespaces())
-  ipcMain.handle('kube:pods', () => getPods())
+
+  ipcMain.handle('kube:registerDeploymentWatcher', (event, namespace) =>
+    registerDeploymentWatcher(
+      namespace,
+      (message) => {
+        mainWindow?.webContents.send('k8s-deployment-message', message)
+      },
+      () => {
+        mainWindow?.webContents.send('k8s-connected')
+      },
+      (err) => {
+        mainWindow?.webContents.send('k8s-error', err)
+      },
+    ),
+  )
 
   ipcMain.handle('kube:registerPodWatcher', (event, namespace) =>
     registerPodWatcher(
@@ -99,11 +113,9 @@ function setupIpcHandlers() {
       },
       () => {
         mainWindow?.webContents.send('k8s-connected')
-        console.log('Connected to K8s')
       },
       (err) => {
         mainWindow?.webContents.send('k8s-error', err)
-        console.error('Error connecting to K8s: ', err)
       },
     ),
   )

@@ -1,16 +1,18 @@
-import type { V1NamespaceList, V1PodList } from '@kubernetes/client-node'
+import type { V1Deployment, V1NamespaceList } from '@kubernetes/client-node'
 
 export interface IKubeAPI {
   initialize: () => Promise<boolean>
 
   registerPodWatcher: (namespace: string) => Promise<void>
-  startPodWatcher: () => void
-  getPods: () => Promise<V1PodList>
+  registerDeploymentWatcher: (namespace: string) => Promise<void>
+
   deletePods: (podNamespace: string, podName: string) => Promise<V1Pod>
 
   getAllNamespaces: () => Promise<V1NamespaceList>
 
   onPodMessage: (callback: (value: K8sObjectEvent<V1Pod>) => void) => void
+  onDeploymentMessage: (callback: (value: K8sObjectEvent<V1Deployment>) => void) => void
+
   onConnected: (callback: () => void) => void
   onError: (callback: (err: Error) => void) => void
 }
