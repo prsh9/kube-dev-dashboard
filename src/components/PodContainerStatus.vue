@@ -1,30 +1,32 @@
 <template>
-  <q-linear-progress
-    :indeterminate="podStatusActual == 'Failed'"
-    rounded
-    :color="podStatusColor + '-4'"
-    size="20px"
-    :buffer-value="readyContainerPercent"
-    :value="readyContainerPercent"
-  >
-    <div class="absolute-full flex flex-center">
-      <q-badge :color="podStatusColor + '-4'" text-color="black" :label="containerLabel" />
-    </div>
-  </q-linear-progress>
-  <q-avatar
-    :color="
-      containerRestarts > 0
-        ? containerRestarts > 1
-          ? 'red accent-1'
-          : 'orange lighten-3'
-        : 'teal lighten-4'
-    "
-    text-color="white"
-    rounded
-    size="20px"
-  >
-    {{ containerRestarts }}
-  </q-avatar>
+  <div class="min_w_h">
+    <q-linear-progress
+      :indeterminate="podStatusActual == 'Failed'"
+      rounded
+      :color="podStatusColor + '-4'"
+      size="20px"
+      :buffer-value="readyContainerPercent"
+      :value="readyContainerPercent"
+    >
+      <div class="absolute-full flex flex-center">
+        <q-badge :color="podStatusColor + '-4'" text-color="black" :label="containerLabel" />
+      </div>
+    </q-linear-progress>
+    <q-avatar
+      :color="
+        containerRestarts > 0
+          ? containerRestarts > 1
+            ? 'red accent-1'
+            : 'orange lighten-3'
+          : 'teal lighten-4'
+      "
+      text-color="white"
+      rounded
+      size="20px"
+    >
+      {{ containerRestarts }}
+    </q-avatar>
+  </div>
 </template>
 
 <script lang="ts">
@@ -97,3 +99,14 @@ export default defineComponent({
   },
 })
 </script>
+
+<style lang="scss">
+// $
+
+.min_w_h {
+  min-width: 130px;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+}
+</style>

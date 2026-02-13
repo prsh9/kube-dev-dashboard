@@ -10,13 +10,19 @@
       :pagination="pagination"
       hide-pagination
       hide-selected-banner
+      dense
+      ref="table"
     >
       <template v-slot:top-right>
-        <q-input dense clearable debounce="300" v-model="filter" placeholder="Search">
-          <template v-slot:append>
-            <q-icon name="mdi-filter" />
-          </template>
-        </q-input>
+        <div v-if="filter != null && filter != ''" class="q-pr-md">
+          <q-btn outline flat dense icon="mdi-transfer-up">
+            <q-tooltip>Scale Up All Filtered Deployment</q-tooltip>
+          </q-btn>
+          <q-btn outline flat dense icon="mdi-transfer-down" @click="test">
+            <q-tooltip>Scale Down All Filtered Deployment</q-tooltip>
+          </q-btn>
+        </div>
+        <TableSearchBox v-model="filter" />
         <q-btn outline flat dense icon="mdi-refresh" @click="registerDeploymentWatcher" />
       </template>
 
@@ -41,12 +47,11 @@
             />
           </q-td>
 
-          <q-td key="actions" :props="props">
+          <q-td key="actions" :props="props" @click="props.expand = !props.expand">
             <q-btn
-              size="xs"
+              size="sm"
               flat
               dense
-              @click="props.expand = !props.expand"
               :icon="props.expand ? 'mdi-chevron-double-up' : 'mdi-chevron-double-down'"
             />
           </q-td>
@@ -77,11 +82,14 @@ import { shortEnglishHumanizer } from 'src/scripts/date-helpers'
 import AgeDisplay from 'components/AgeDisplay.vue'
 import DeploymentReplica from 'components/DeploymentReplicas.vue'
 import DeploymentImage from 'components/DeploymentImage.vue'
+import { type QTable } from 'quasar'
+import TableSearchBox from 'components/TableSearchBox.vue'
 
 export default defineComponent({
   name: 'DisplayDeployment',
 
   components: {
+    TableSearchBox,
     DeploymentImage,
     DeploymentReplica,
     AgeDisplay,
@@ -90,7 +98,7 @@ export default defineComponent({
 
   created() {
     console.log('DisplayDeployment created')
-    this.initializeDeploymentCallbacks()
+    this.resetAndInitDeployments()
   },
 
   activated() {
@@ -101,9 +109,15 @@ export default defineComponent({
   },
 
   methods: {
-    ...mapActions(useK8DataStore, ['registerDeploymentWatcher', 'initializeDeploymentCallbacks']),
+    ...mapActions(useK8DataStore, ['registerDeploymentWatcher', 'resetAndInitDeployments']),
     getUid(item: V1Deployment): string {
       return getKey(item.metadata)
+    },
+    test() {
+      const ro = (this.$refs.table as QTable).filteredSortedRows
+      ro.forEach((value: V1Deployment) => {
+        console.log(value.metadata?.name)
+      })
     },
   },
 
@@ -162,7 +176,7 @@ export default defineComponent({
         sortBy: 'name',
         rowsPerPage: 0,
       },
-      filter: '',
+      filter: '' as string | null,
     }
   },
 })

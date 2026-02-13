@@ -10,13 +10,10 @@
       :pagination="pagination"
       hide-pagination
       hide-selected-banner
+      dense
     >
       <template v-slot:top-right>
-        <q-input dense clearable debounce="300" v-model="filter" placeholder="Search">
-          <template v-slot:append>
-            <q-icon name="mdi-filter" />
-          </template>
-        </q-input>
+        <TableSearchBox v-model="filter" />
         <q-btn outline flat dense icon="mdi-refresh" @click="registerPodWatcher" />
       </template>
 
@@ -26,7 +23,7 @@
             {{ props.cols[0].value }}
           </q-td>
 
-          <q-td key="containers" :props="props" class="min_w_h">
+          <q-td key="containers" :props="props">
             <PodContainerStatus :pod="props.row" />
           </q-td>
 
@@ -45,12 +42,11 @@
             />
           </q-td>
 
-          <q-td key="actions" :props="props">
+          <q-td key="actions" :props="props" @click="props.expand = !props.expand">
             <q-btn
-              size="md"
+              size="sm"
               flat
               dense
-              @click="props.expand = !props.expand"
               :icon="props.expand ? 'mdi-chevron-double-up' : 'mdi-chevron-double-down'"
             />
           </q-td>
@@ -81,11 +77,13 @@ import type { V1Pod } from '@kubernetes/client-node'
 import { getKey } from 'src/scripts/k8s-helpers'
 import { shortEnglishHumanizer } from 'src/scripts/date-helpers'
 import AgeDisplay from 'components/AgeDisplay.vue'
+import TableSearchBox from 'components/TableSearchBox.vue'
 
 export default defineComponent({
   name: 'DisplayPodData',
 
   components: {
+    TableSearchBox,
     AgeDisplay,
     BasePage,
     PodContainerStatus,
@@ -94,7 +92,7 @@ export default defineComponent({
 
   created() {
     console.log('DisplayPodData created')
-    this.initializePodCallbacks()
+    this.resetAndInitPods()
   },
 
   activated() {
@@ -105,7 +103,7 @@ export default defineComponent({
   },
 
   methods: {
-    ...mapActions(useK8DataStore, ['registerPodWatcher', 'initializePodCallbacks', 'deletePod']),
+    ...mapActions(useK8DataStore, ['registerPodWatcher', 'resetAndInitPods', 'deletePod']),
     getPodUid(pod: V1Pod): string {
       return getKey(pod.metadata)
     },
@@ -187,14 +185,3 @@ export default defineComponent({
   },
 })
 </script>
-
-<style lang="scss">
-// $
-
-.min_w_h {
-  min-width: 130px;
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-}
-</style>

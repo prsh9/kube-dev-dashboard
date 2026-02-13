@@ -50,7 +50,11 @@ export function registerDeploymentWatcher(
     deploymentWatcher,
     `/apis/apps/v1/namespaces/${namespace}/deployments`,
     () => k8sAppApi.listNamespacedDeployment({ namespace }),
-  )
+  ).then(value =>
+  deploymentWatcher = value)
+    .catch((err: Error) => {
+      console.error('Error initializing K8s client: ', err)
+    })
 }
 
 export function registerPodWatcher(
@@ -67,22 +71,42 @@ export function registerPodWatcher(
     `/api/v1/namespaces/${namespace}/pods`,
     () => k8sApi.listNamespacedPod({ namespace }),
   )
+    .then(value =>
+    podWatcher = value)
+    .catch((err: Error) => {
+      console.error('Error initializing K8s client: ', err)
+    })
 }
 
 export function deletePod(podNamespace: string, podName: string) {
   return k8sApi.deleteNamespacedPod({ name: podName, namespace: podNamespace })
 }
 
+export function scaleDeployment(namespace: string, deployment: string, replicas: number) {
+  return k8sAppApi
+    .patchNamespacedDeploymentScale({
+      name: deployment,
+      namespace: namespace,
+      body: {
+        spec: {
+          replicas: replicas,
+        },
+      },
+    })
+    .then(() => true)
+    .catch(() => false)
+}
+
 export function getAllNamespaces() {
   try {
     return k8sApi.listNamespace()
   } catch (err) {
-    console.error('This Error :', err)
+    console.error('List Namespace Error :', err)
     throw err
   }
 }
 
-function registerObjectWatcher<T extends KubernetesObject>(
+async function registerObjectWatcher<T extends KubernetesObject>(
   messageCallback: (message: K8sObjectEvent<T>) => void,
   connectCallback: () => void,
   errorCallback: (errMessage?: Error) => void,
@@ -92,48 +116,67 @@ function registerObjectWatcher<T extends KubernetesObject>(
 ) {
   try {
     if (watcher) {
-      console.log('Stopping existing watcher before registering new one')
+      // console.log('Stopping existing watcher before registering new one')
 
-      watcher
-        .stop()
-        .then(() => console.log('Stopped existing watcher'))
-        .catch((err) => console.error('Error stopping existing watcher: ', err))
-    }
-
-    const watch = new k8s.Watch(kc)
-    watcher = new k8s.ListWatch<T>(watcherPath, watch, listFunction)
-
-    watcher.on('add', (k8sObj: T) => {
-      // console.log('Object added: ', pod.metadata?.name)
-      messageCallback({ event: 'ADDED', object: k8sObj })
-    })
-
-    watcher.on('update', (k8sObj: T) => {
-      // console.log('Object Updated: ', pod.metadata?.name)
-      messageCallback({ event: 'MODIFIED', object: k8sObj })
-    })
-
-    watcher.on('delete', (k8sObj: T) => {
-      // console.log('Object deleted: ', pod.metadata?.name)
-      messageCallback({ event: 'DELETED', object: k8sObj })
-    })
-
-    watcher.on('connect', () => {
-      connectCallback()
-    })
-
-    watcher.on('error', (err?: Error) => {
-      if (err && !(err instanceof k8s.AbortError)) {
-        errorCallback(err ?? new Error('Unknown error'))
+      try {
+        await watcher.stop()
+        // console.log('Stopped existing watcher')
+      } catch (err) {
+        console.error('Error stopping existing watcher: ', err)
       }
-    })
-
-    watcher.start().catch((err) => {
-      console.error('Error starting watcher: ', err)
-      errorCallback(err)
-    })
+    }
+    return registerWatcher(
+      messageCallback,
+      connectCallback,
+      errorCallback,
+      watcherPath,
+      listFunction,
+    )
   } catch (err) {
     console.error('Error initializing watcher: ', err)
     throw err
   }
+}
+
+function registerWatcher<T extends KubernetesObject>(
+  messageCallback: (message: K8sObjectEvent<T>) => void,
+  connectCallback: () => void,
+  errorCallback: (errMessage?: Error) => void,
+  watcherPath: string,
+  listFunction: ListPromise<T>,
+) {
+  const watch = new k8s.Watch(kc)
+  const watcher = new k8s.ListWatch<T>(watcherPath, watch, listFunction)
+
+  watcher.on('add', (k8sObj: T) => {
+    // console.log('Object added: ', k8sObj.metadata?.name)
+    messageCallback({ event: 'ADDED', object: k8sObj })
+  })
+
+  watcher.on('update', (k8sObj: T) => {
+    // console.log('Object Updated: ', k8sObj.metadata?.name)
+    messageCallback({ event: 'MODIFIED', object: k8sObj })
+  })
+
+  watcher.on('delete', (k8sObj: T) => {
+    // console.log('Object deleted: ', k8sObj.metadata?.name)
+    messageCallback({ event: 'DELETED', object: k8sObj })
+  })
+
+  watcher.on('connect', () => {
+    connectCallback()
+  })
+
+  watcher.on('error', (err?: Error) => {
+    if (err && !(err instanceof k8s.AbortError)) {
+      errorCallback(err ?? new Error('Unknown error'))
+    }
+  })
+
+  watcher.start().catch((err) => {
+    console.error('Error starting watcher: ', err)
+    errorCallback(err)
+  })
+
+  return watcher
 }

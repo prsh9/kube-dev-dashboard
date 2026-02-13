@@ -90,11 +90,15 @@ export const useK8DataStore = defineStore('k8data', {
         this.message = err.message
       })
     },
-    initializePodCallbacks() {
+    resetAndInitPods() {
+      this.pod_data.items = {}
       initializeLifecycleCallbacks(this.pod_data.items, window.kube.onPodMessage)
+      this.setRefreshPods(true)
     },
-    initializeDeploymentCallbacks() {
+    resetAndInitDeployments() {
+      this.deployment_data.items = {}
       initializeLifecycleCallbacks(this.deployment_data.items, window.kube.onDeploymentMessage)
+      this.setRefreshDeployments(true)
     },
 
     setRefreshNamespaces(shouldRefresh: boolean) {
@@ -166,12 +170,9 @@ export const useK8DataStore = defineStore('k8data', {
 
     applyNamespaceSelection(namespace: string) {
       this.selectedNamespace = namespace
-      this.pod_data.shouldRefresh = true
-      this.svc_data.shouldRefresh = true
-      this.deployment_data.shouldRefresh = true
-      this.pod_data.items = {}
-      this.svc_data.items = {}
-      this.deployment_data.items = {}
+      this.resetAndInitPods()
+      this.resetAndInitDeployments()
+
     },
   },
 })

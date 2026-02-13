@@ -2,7 +2,7 @@
   <q-chip
     outline
     clickable
-    dense
+    size="md"
     color="primary"
     icon="mdi-ship-wheel"
     @click="copyImageValue(fullImageUri)"
@@ -44,6 +44,8 @@ const truncatedImage = computed(() => {
 const copyImageValue = (text: string) => {
   copyToClipboard(text)
     .then(() => $q.notify({ message: 'Image URI Copied!', color: 'positive', timeout: 1000 }))
-    .catch(() => $q.notify({ message: 'Failure in copying Image URI!', color: 'negative', timeout: 1000 }))
+    .catch(() =>
+      $q.notify({ message: 'Failure in copying Image URI!', color: 'negative', timeout: 1000 }),
+    )
 }
 </script>

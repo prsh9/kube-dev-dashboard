@@ -1,7 +1,7 @@
 <template>
   {{ displayValue }}
   <q-tooltip :offset="[0, 10]">
-    {{ new Date(timestamp).toString() }}
+    {{ toolTipValue }}
   </q-tooltip>
 </template>
 
@@ -18,13 +18,20 @@ export default defineComponent({
     },
     timestamp: {
       type: [Date, String],
-      required: true,
     },
   },
 
   components: {},
 
-  computed: {},
+  computed: {
+    toolTipValue: function () {
+      let data: string | Date = ''
+      if (this.timestamp) {
+        data = this.timestamp
+      }
+      return new Date(data).toString()
+    },
+  },
 
   data() {
     return {}
