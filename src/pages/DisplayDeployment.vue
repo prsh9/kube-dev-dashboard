@@ -15,10 +15,10 @@
     >
       <template v-slot:top-right>
         <div v-if="filter != null && filter != ''" class="q-pr-md">
-          <q-btn outline flat dense icon="mdi-transfer-up">
+          <q-btn outline flat dense icon="mdi-transfer-up" @click="scaleUpAll">
             <q-tooltip>Scale Up All Filtered Deployment</q-tooltip>
           </q-btn>
-          <q-btn outline flat dense icon="mdi-transfer-down" @click="test">
+          <q-btn outline flat dense icon="mdi-transfer-down" @click="scaleDownAll">
             <q-tooltip>Scale Down All Filtered Deployment</q-tooltip>
           </q-btn>
         </div>
@@ -109,15 +109,53 @@ export default defineComponent({
   },
 
   methods: {
-    ...mapActions(useK8DataStore, ['registerDeploymentWatcher', 'resetAndInitDeployments']),
+    ...mapActions(useK8DataStore, [
+      'registerDeploymentWatcher',
+      'resetAndInitDeployments',
+      'scaleDeployment',
+    ]),
     getUid(item: V1Deployment): string {
       return getKey(item.metadata)
     },
-    test() {
-      const ro = (this.$refs.table as QTable).filteredSortedRows
-      ro.forEach((value: V1Deployment) => {
-        console.log(value.metadata?.name)
+    scale(row: V1Deployment, replica: number): Promise<boolean> {
+      const uid = this.getUid(row)
+      return this.scaleDeployment(uid, replica)
+    },
+    scaleAll(replicas: number) {
+      const filteredSortedRows = (this.$refs.table as QTable).filteredSortedRows
+      const allScalePromise = filteredSortedRows.map((value: V1Deployment) => {
+        return this.scale(value, replicas)
       })
+      void Promise.allSettled(allScalePromise).then((values) => {
+        const hasRejection = values.some((v) => v.status === 'rejected')
+
+        if (hasRejection) {
+          this.$q.notify({
+            message: `Error performing operation. Some Deployments could not be scaled !`,
+            type: 'warning',
+          })
+        } else {
+          this.$q.notify({
+            message: `Scaled all deployments successfully !`,
+            type: 'info',
+          })
+        }
+      })
+      return
+    },
+    scaleUp() {
+      console.log('In Progress')
+      return
+    },
+    scaleDown() {
+      console.log('In Progress')
+      return
+    },
+    scaleUpAll() {
+      this.scaleAll(1)
+    },
+    scaleDownAll() {
+      this.scaleAll(0)
     },
   },
 

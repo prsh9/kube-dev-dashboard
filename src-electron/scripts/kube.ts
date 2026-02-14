@@ -83,6 +83,7 @@ export function deletePod(podNamespace: string, podName: string) {
 }
 
 export function scaleDeployment(namespace: string, deployment: string, replicas: number) {
+  const options = k8s.setHeaderOptions('Content-Type', k8s.PatchStrategy.MergePatch)
   return k8sAppApi
     .patchNamespacedDeploymentScale({
       name: deployment,
@@ -92,9 +93,9 @@ export function scaleDeployment(namespace: string, deployment: string, replicas:
           replicas: replicas,
         },
       },
-    })
+    },
+      options)
     .then(() => true)
-    .catch(() => false)
 }
 
 export function getAllNamespaces() {

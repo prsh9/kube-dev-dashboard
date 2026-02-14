@@ -8,6 +8,8 @@ export interface IKubeAPI {
 
   deletePods: (podNamespace: string, podName: string) => Promise<V1Pod>
 
+  scaleDeployment: (namespace: string, deployment: string, replica: number) => Promise<boolean>
+
   getAllNamespaces: () => Promise<V1NamespaceList>
 
   onPodMessage: (callback: (value: K8sObjectEvent<V1Pod>) => void) => void

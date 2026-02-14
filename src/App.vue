@@ -3,18 +3,18 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
-import { useK8DataStore } from 'src/stores/k8-data-store';
-import { mapState } from 'pinia';
+import { defineComponent } from 'vue'
+import { useK8DataStore } from 'src/stores/k8-data-store'
+import { mapActions, mapState } from 'pinia'
 
 export default defineComponent({
   name: 'App',
 
   created() {
-    console.log("App created");
+    console.log('App created')
     this.initApp().catch((error) => {
-      console.error("Initialization error:", error);
-    });
+      console.error('Initialization error:', error)
+    })
   },
 
   computed: {
@@ -22,18 +22,18 @@ export default defineComponent({
   },
 
   methods: {
+    ...mapActions(useK8DataStore, ['initialize']),
     async initApp() {
       try {
-        const response = await window.kube.initialize();
-        console.log("Kube initialized:", response);
+        const response = await this.initialize()
+        console.log('Kube initialized:', response)
         if (!response) {
-          await this.$router.push('/error-init');
+          await this.$router.push('/error-init')
         }
       } catch {
-        await this.$router.push('/error-init');
+        await this.$router.push('/error-init')
       }
-    }
-  }
-});
-
+    },
+  },
+})
 </script>

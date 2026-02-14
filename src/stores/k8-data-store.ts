@@ -165,7 +165,17 @@ export const useK8DataStore = defineStore('k8data', {
         const name = podToRemove.metadata?.name ?? ''
         return window.kube.deletePods(namespace, name)
       }
-      return Promise.reject(new Error('Pod not found'))
+      return Promise.reject(new Error('Pod Not Found !'))
+    },
+
+    scaleDeployment(deploymentUid: string, replicas: number) {
+      const deploymentToScale = this.deployment_data.items[deploymentUid]
+      if(deploymentToScale) {
+        const namespace = deploymentToScale.metadata?.namespace ?? ''
+        const name = deploymentToScale.metadata?.name ?? ''
+        return window.kube.scaleDeployment(namespace, name, replicas)
+      }
+      return Promise.reject(new Error('Deployment Not Found !'))
     },
 
     applyNamespaceSelection(namespace: string) {

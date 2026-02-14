@@ -17,6 +17,10 @@ contextBridge.exposeInMainWorld('kube', {
     return ipcRenderer.invoke('kube:deletePod', podNamespace, podName)
   },
 
+  scaleDeployment: (namespace: string, deployment: string, replica: number) => {
+    return ipcRenderer.invoke('kube:scaleDeployment', namespace, deployment, replica)
+  },
+
   getAllNamespaces: () => ipcRenderer.invoke('kube:namespaces'),
 
   onPodMessage: (callback: (value: K8sObjectEvent<V1Pod>) => void) =>

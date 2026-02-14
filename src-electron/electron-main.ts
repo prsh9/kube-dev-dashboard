@@ -8,6 +8,7 @@ import {
   initialize,
   registerDeploymentWatcher,
   registerPodWatcher,
+  scaleDeployment,
 } from './scripts/kube'
 import { installExtension, VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 
@@ -86,6 +87,10 @@ function setupIpcHandlers() {
 
   ipcMain.handle('kube:deletePod', (event, podNamespace, podName) =>
     deletePod(podNamespace, podName),
+  )
+
+  ipcMain.handle('kube:scaleDeployment', (event, namespace, deployment, replica) =>
+    scaleDeployment(namespace, deployment, replica),
   )
 
   ipcMain.handle('kube:namespaces', () => getAllNamespaces())
